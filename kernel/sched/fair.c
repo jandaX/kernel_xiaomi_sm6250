@@ -744,6 +744,7 @@ struct sched_entity *__pick_last_entity(struct cfs_rq *cfs_rq)
 
 	return rb_entry(last, struct sched_entity, run_node);
 }
+#endif
 
 // /**************************************************************
 //  * Scheduling class statistics methods:
@@ -771,7 +772,6 @@ struct sched_entity *__pick_last_entity(struct cfs_rq *cfs_rq)
 
 // 	return 0;
 // }
-#endif
 
 /*
  * delta /= w
