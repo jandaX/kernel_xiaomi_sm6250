@@ -3035,6 +3035,42 @@ static const struct dev_pm_ops msm_geni_serial_pm_ops = {
 	.restore = msm_geni_serial_sys_hib_resume_noirq,
 };
 
+static void msm_geni_serial_ssr_down(struct device *dev)
+{
+	struct platform_device *pdev = to_platform_device(dev);
+	struct msm_geni_serial_port *port = platform_get_drvdata(pdev);
+	struct uart_port *uport = &port->uport;
+	int ret = 0;
+
+	mutex_lock(&port->uart_ssr.ssr_lock);
+	port->uart_ssr.is_ssr_down = true;
+	ret = pm_runtime_force_suspend(uport->dev);
+	if (ret) {
+		dev_err(uport->dev, "%s:force suspend failed %d\n", __func__,
+			ret);
+		goto exit;
+	}
+
+	pm_runtime_put_noidle(uport->dev);
+	pm_runtime_enable(uport->dev);
+
+	IPC_LOG_MSG(port->ipc_log_misc, "%s: Force suspend done\n", __func__);
+exit:
+	mutex_unlock(&port->uart_ssr.ssr_lock);
+}
+
+static void msm_geni_serial_ssr_up(struct device *dev)
+{
+	struct platform_device *pdev = to_platform_device(dev);
+	struct msm_geni_serial_port *port = platform_get_drvdata(pdev);
+
+	mutex_lock(&port->uart_ssr.ssr_lock);
+	port->uart_ssr.is_ssr_down = false;
+	port->port_setup = false;
+	IPC_LOG_MSG(port->ipc_log_misc, "%s: Force resume done\n", __func__);
+	mutex_unlock(&port->uart_ssr.ssr_lock);
+}
+
 static struct platform_driver msm_geni_serial_platform_driver = {
 	.remove = msm_geni_serial_remove,
 	.probe = msm_geni_serial_probe,
