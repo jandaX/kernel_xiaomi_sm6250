@@ -790,7 +790,9 @@ static int ipa3_rx_switch_to_intr_mode(struct ipa3_sys_context *sys)
 			ipa3_inc_acquire_wakelock();
 			atomic_set(&sys->curr_polling_state, 1);
 		} else {
-			IPAERR("Failed to switch to intr mode.\n");
+			IPAERR("Failed to switch to intr mode %d ch_id %lu\n",
+			       atomic_read(&sys->curr_polling_state),
+			       sys->ep->gsi_chan_hdl);
 		}
 	}
 
